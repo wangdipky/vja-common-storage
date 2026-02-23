@@ -33,20 +33,32 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
         String username = null;
-        String token = request.getHeader("Authorization");
+        String token = null;
+        String header = request.getHeader("Authorization");
 
-        // Get token
-        if(!StringUtils.isEmpty(token) && token.startsWith("Bearer ")) {
-            token = token.substring(7);
+        // Check token in header and get it
+        if(null != header && header.startsWith("Bearer ")) {
+
+            token = header.substring(7);
         }
 
-        // Get user detail
-        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-        if(jwtConfig.validateToken(userDetails, token) && ObjectUtils.isEmpty(SecurityContextHolder.getContext().getAuthentication())) {
+        // Extract username from token
+        if(null != token) {
 
-            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-            authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+            username = jwtConfig.extractUsername(token);
+        }
+
+        // validate token
+        if(null != token && null != username) {
+
+            // Get user detail
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            if(jwtConfig.validateToken(userDetails, token) && ObjectUtils.isEmpty(SecurityContextHolder.getContext().getAuthentication())) {
+
+                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+            }
         }
 
         // Do filter

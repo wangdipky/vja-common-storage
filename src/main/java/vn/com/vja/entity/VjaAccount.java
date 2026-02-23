@@ -1,6 +1,5 @@
 package vn.com.vja.entity;
 
-import com.vn.vja.entity.CoreAuditDelete;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
